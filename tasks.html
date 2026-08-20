@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoGreen CRM — مهامي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --dark:#122A1C; --primary:#1B4332; --accent:#52B788; --accent-light:#95D5B2;
+    --earth:#A9814A; --bg:#F7F5F0; --text:#1F2521; --muted:#6B7268; --danger:#C1666B;
+    --warn:#C48A3B; --line:#E4E2DA;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;background:var(--primary);color:#fff;flex-wrap:wrap;}
+  .topbar a{color:#EAF3ED;text-decoration:none;font-size:14px;}
+  .brand{font-family:'Fraunces',serif;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px;}
+  .head-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+  h1{font-family:'Fraunces',serif;font-size:23px;margin:0;}
+  .add-btn{background:var(--primary);color:#fff;border:none;padding:11px 18px;border-radius:9px;font-weight:700;font-family:inherit;font-size:13.5px;cursor:pointer;}
+  .add-btn:hover{background:var(--dark);}
+
+  .reminder{
+    background:#FFF6E9;border:1px solid #F0D8AE;color:#8A5B12;border-radius:10px;
+    padding:13px 16px;margin-bottom:22px;font-size:13.5px;display:none;line-height:1.9;
+  }
+  .reminder b{display:block;margin-bottom:4px;font-size:14px;}
+
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  @media (max-width:900px){.board{grid-template-columns:1fr 1fr;}}
+  @media (max-width:560px){.board{grid-template-columns:1fr;}}
+
+  .col{background:#EFEDE6;border-radius:14px;padding:12px;min-height:120px;}
+  .col-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:10px;padding:0 4px;}
+  .col-head .dot{width:8px;height:8px;border-radius:50%;}
+  .col-head .count{margin-inline-start:auto;background:#fff;border-radius:20px;padding:1px 8px;font-size:11.5px;color:var(--muted);}
+
+  .task-card{background:#fff;border-radius:10px;padding:12px 13px;margin-bottom:9px;border:1px solid var(--line);}
+  .task-title{font-weight:700;font-size:13.5px;margin-bottom:4px;}
+  .task-desc{color:var(--muted);font-size:12px;margin-bottom:8px;line-height:1.6;}
+  .task-due{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-bottom:8px;}
+  .task-due.overdue{color:var(--danger);font-weight:700;}
+  .task-actions{display:flex;gap:6px;align-items:center;}
+  select.status-select{flex:1;font-size:11.5px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-family:inherit;background:#fff;}
+  .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 6px;}
+  .del-btn:hover{color:var(--danger);}
+  .empty-col{color:var(--muted);font-size:12px;text-align:center;padding:16px 6px;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(18,42,28,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff;border-radius:14px;padding:26px;width:100%;max-width:380px;}
+  .modal h3{margin:0 0 16px;font-family:'Fraunces',serif;}
+  .modal input, .modal textarea, .modal select{width:100%;padding:11px;border:1.5px solid var(--line);border-radius:9px;margin-bottom:12px;font-family:inherit;font-size:14px;}
+  .modal textarea{resize:vertical;min-height:64px;}
+  .modal-actions{display:flex;gap:10px;margin-top:6px;}
+  .modal-actions button{flex:1;padding:11px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:13.5px;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-ghost{background:#F1EFE9;color:var(--text);}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--primary);margin-bottom:5px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="dashboard.html">&#8594; الرئيسية</a>
+  <span class="brand" style="margin-inline-start:auto;"><img src="logo.jpg" alt="GoGreen" style="width:26px;height:26px;border-radius:50%;object-fit:cover;">GoGreen CRM</span>
+</div>
+
+<div class="wrap">
+  <div class="head-row">
+    <h1>مهامي</h1>
+    <button class="add-btn" id="open-add-task">+ مهمة جديدة</button>
+  </div>
+
+  <div class="reminder" id="reminder-box"></div>
+
+  <div class="board">
+    <div class="col">
+      <div class="col-head"><span class="dot" style="background:#C48A3B;"></span>معلقة <span class="count" id="count-pending">0</span></div>
+      <div id="col-pending"></div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="dot" style="background:#3B7FC4;"></span>قيد التنفيذ <span class="count" id="count-in_progress">0</span></div>
+      <div id="col-in_progress"></div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="dot" style="background:#9A7B4F;"></span>مؤجلة <span class="count" id="count-postponed">0</span></div>
+      <div id="col-postponed"></div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="dot" style="background:#52B788;"></span>مكتملة <span class="count" id="count-completed">0</span></div>
+      <div id="col-completed"></div>
+    </div>
+  </div>
+</div>
+
+<!-- مودال إضافة مهمة -->
+<div class="modal-bg" id="task-modal">
+  <div class="modal">
+    <h3>مهمة جديدة</h3>
+    <label>العنوان</label>
+    <input type="text" id="task-title" placeholder="مثال: مراجعة فاتورة العميل">
+    <label>تفاصيل (اختياري)</label>
+    <textarea id="task-desc" placeholder="أي تفاصيل إضافية"></textarea>
+    <label>تاريخ الاستحقاق (اختياري)</label>
+    <input type="date" id="task-due">
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancel-task">إلغاء</button>
+      <button class="btn-primary" id="save-task">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+let me = null;
+let allTasks = [];
+
+const statusLabels = { pending: 'معلقة', in_progress: 'قيد التنفيذ', postponed: 'مؤجلة', completed: 'مكتملة' };
+
+async function init(){
+  const session = await requireAuth();
+  if(!session) return;
+  me = session.user;
+  startHeartbeat(me.id);
+  loadTasks();
+}
+
+async function loadTasks(){
+  const { data, error } = await sb.from('tasks').select('*').eq('user_id', me.id).order('due_date', { ascending: true, nullsFirst: false });
+  if(error){
+    document.getElementById('reminder-box').innerHTML = '⚠️ تعذّر تحميل المهام: ' + error.message;
+    document.getElementById('reminder-box').style.cssText = 'display:block;background:#FBEAEA;border-color:#F0AEB0;color:#8A2E32;';
+    return;
+  }
+  allTasks = data || [];
+  renderBoard();
+  renderReminder();
+}
+
+function todayStr(){
+  return new Date().toISOString().split('T')[0];
+}
+
+function renderReminder(){
+  const today = todayStr();
+  const dueTasks = allTasks.filter(t => t.status !== 'completed' && t.due_date && t.due_date <= today);
+  const box = document.getElementById('reminder-box');
+  if(dueTasks.length === 0){ box.style.display = 'none'; return; }
+
+  const overdue = dueTasks.filter(t => t.due_date < today);
+  const dueToday = dueTasks.filter(t => t.due_date === today);
+
+  let html = '';
+  if(overdue.length) html += `<b>⚠️ عندك ${overdue.length} مهمة متأخرة عن ميعادها</b>`;
+  if(dueToday.length) html += `${overdue.length ? '<br>' : '<b>'}📌 عندك ${dueToday.length} مهمة مستحقة النهاردة${overdue.length ? '' : '</b>'}`;
+  box.innerHTML = html;
+  box.style.display = 'block';
+}
+
+function renderBoard(){
+  const today = todayStr();
+  ['pending','in_progress','postponed','completed'].forEach(status => {
+    const col = document.getElementById('col-' + status);
+    const tasks = allTasks.filter(t => t.status === status);
+    document.getElementById('count-' + status).textContent = tasks.length;
+
+    if(tasks.length === 0){
+      col.innerHTML = '<div class="empty-col">لا يوجد مهام</div>';
+      return;
+    }
+
+    col.innerHTML = tasks.map(t => {
+      const overdue = t.due_date && t.due_date < today && t.status !== 'completed';
+      const dueLabel = t.due_date ? formatDate(t.due_date) : '';
+      return `
+        <div class="task-card">
+          <div class="task-title">${escapeHtml(t.title)}</div>
+          ${t.description ? `<div class="task-desc">${escapeHtml(t.description)}</div>` : ''}
+          ${dueLabel ? `<div class="task-due ${overdue ? 'overdue' : ''}">📅 ${dueLabel}${overdue ? ' — متأخرة' : ''}</div>` : ''}
+          <div class="task-actions">
+            <select class="status-select" onchange="updateStatus('${t.id}', this.value)">
+              ${Object.entries(statusLabels).map(([k,v]) => `<option value="${k}" ${k===t.status?'selected':''}>${v}</option>`).join('')}
+            </select>
+            <button class="del-btn" onclick="deleteTask('${t.id}')" title="حذف">🗑</button>
+          </div>
+        </div>`;
+    }).join('');
+  });
+}
+
+function formatDate(d){
+  const date = new Date(d + 'T00:00:00');
+  return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+}
+
+function escapeHtml(s){
+  return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function updateStatus(id, status){
+  const payload = { status, updated_at: new Date().toISOString() };
+  if(status === 'completed') payload.completed_at = new Date().toISOString();
+  const { error } = await sb.from('tasks').update(payload).eq('id', id);
+  if(error){ alert('حصل خطأ: ' + error.message); }
+  loadTasks();
+}
+
+async function deleteTask(id){
+  if(!confirm('تأكيد حذف المهمة؟')) return;
+  const { error } = await sb.from('tasks').delete().eq('id', id);
+  if(error){ alert('حصل خطأ: ' + error.message); }
+  loadTasks();
+}
+
+document.getElementById('open-add-task').onclick = () => document.getElementById('task-modal').classList.add('show');
+document.getElementById('cancel-task').onclick = () => document.getElementById('task-modal').classList.remove('show');
+
+document.getElementById('save-task').onclick = async () => {
+  const title = document.getElementById('task-title').value.trim();
+  const description = document.getElementById('task-desc').value.trim();
+  const due_date = document.getElementById('task-due').value || null;
+
+  if(!title){ alert('اكتب عنوان المهمة'); return; }
+
+  const { error } = await sb.from('tasks').insert({ user_id: me.id, title, description, due_date, status: 'pending' });
+
+  if(error){
+    alert('حصل خطأ أثناء الحفظ: ' + error.message);
+    return;
+  }
+
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-desc').value = '';
+  document.getElementById('task-due').value = '';
+  document.getElementById('task-modal').classList.remove('show');
+  loadTasks();
+};
+
+init();
+</script>
+</body>
+</html>
