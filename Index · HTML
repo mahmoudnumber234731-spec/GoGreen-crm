@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoGreen CRM — تسجيل الدخول</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --dark:#122A1C;
+    --primary:#1B4332;
+    --accent:#52B788;
+    --accent-light:#95D5B2;
+    --earth:#A9814A;
+    --bg:#F7F5F0;
+    --text:#1F2521;
+    --muted:#6B7268;
+    --danger:#C1666B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Tajawal','Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+  }
+  .stage{
+    display:flex;
+    width:100%;
+    min-height:100vh;
+  }
+  /* ---------- اللوحة الخضراء ---------- */
+  .brand-panel{
+    flex:1.1;
+    background:radial-gradient(120% 140% at 20% 0%, #1F5A3C 0%, var(--primary) 45%, var(--dark) 100%);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:56px 48px;
+    position:relative;
+    overflow:hidden;
+  }
+  .brand-panel svg.pattern{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:.16;
+    stroke:#fff;
+  }
+  .brand-top{position:relative;z-index:1;}
+  .logo-mark{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .logo-mark .glyph{
+    width:44px;height:44px;
+    display:grid;place-items:center;
+    background:var(--accent);
+    border-radius:12px;
+    font-size:22px;
+  }
+  .logo-mark .word{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:.3px;
+  }
+  .brand-tagline{
+    position:relative;z-index:1;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,3.4vw,42px);
+    line-height:1.25;
+    max-width:480px;
+    margin-top:60px;
+  }
+  .brand-tagline span{color:var(--accent-light);}
+  .brand-sub{
+    position:relative;z-index:1;
+    color:#CFE7DA;
+    font-size:15px;
+    max-width:420px;
+    line-height:1.9;
+    margin-top:18px;
+  }
+  .brand-foot{
+    position:relative;z-index:1;
+    font-size:13px;
+    color:#9FC7AE;
+    border-top:1px solid rgba(255,255,255,.15);
+    padding-top:18px;
+    display:flex;
+    justify-content:space-between;
+  }
+  /* ---------- لوحة الدخول ---------- */
+  .form-panel{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+  }
+  .form-box{
+    width:100%;
+    max-width:380px;
+  }
+  .form-box h1{
+    font-family:'Fraunces',serif;
+    font-size:26px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .form-box p.hint{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 32px;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--primary);
+    margin-bottom:6px;
+  }
+  .field{margin-bottom:18px;}
+  input{
+    width:100%;
+    padding:13px 14px;
+    border:1.5px solid #DDE3DC;
+    border-radius:10px;
+    font-size:15px;
+    font-family:inherit;
+    background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(82,183,136,.18);
+  }
+  button.submit{
+    width:100%;
+    padding:14px;
+    margin-top:8px;
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:background .15s, transform .1s;
+  }
+  button.submit:hover{background:var(--dark);}
+  button.submit:active{transform:scale(.98);}
+  button.submit:disabled{opacity:.6;cursor:default;}
+  .spinner{
+    width:16px;height:16px;
+    border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .msg{
+    margin-top:16px;
+    font-size:13.5px;
+    padding:11px 14px;
+    border-radius:8px;
+    display:none;
+    line-height:1.6;
+  }
+  .msg.error{background:#FBEAEA;color:var(--danger);display:block;}
+  .msg.ok{background:#E9F6EF;color:#1D6E45;display:block;}
+  .foot-note{
+    margin-top:28px;
+    font-size:12.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+  @media (max-width:860px){
+    .brand-panel{display:none;}
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <!-- اللوحة الخضراء: الهوية -->
+    <div class="brand-panel">
+      <svg class="pattern" viewBox="0 0 400 800" fill="none" preserveAspectRatio="xMidYMid slice">
+        <path d="M-20 780 C 60 700, 40 620, 110 560 C 180 500, 160 420, 90 360" stroke-width="1.4"/>
+        <path d="M40 800 C 120 720, 100 640, 170 580 C 240 520, 220 440, 150 380" stroke-width="1.4"/>
+        <circle cx="110" cy="560" r="4" fill="#fff" stroke="none"/>
+        <circle cx="170" cy="580" r="4" fill="#fff" stroke="none"/>
+        <path d="M320 60 C 280 110, 290 160, 250 200" stroke-width="1.2"/>
+        <circle cx="250" cy="200" r="3" fill="#fff" stroke="none"/>
+      </svg>
+      <div class="brand-top">
+        <div class="logo-mark">
+          <img src="logo.jpg" alt="GoGreen" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+        </div>
+      </div>
+      <div>
+        <div class="brand-tagline">إدارة أعمالكم <span>بجذور راسخة</span> ونمو مستمر</div>
+        <div class="brand-sub">GoGreen for Agricultural Investment &amp; Development — نظام إدارة علاقات العملاء الخاص بالشركة، في مكان واحد آمن لكل الأقسام.</div>
+      </div>
+      <div class="brand-foot">
+        <span>GoGreen CRM</span>
+        <span>Agricultural Investment &amp; Development</span>
+      </div>
+    </div>
+
+    <!-- لوحة الدخول -->
+    <div class="form-panel">
+      <div class="form-box">
+        <h1>تسجيل الدخول</h1>
+        <p class="hint">أهلاً بيك تاني، ادخل بياناتك للمتابعة</p>
+
+        <form id="login-form">
+          <div class="field">
+            <label for="email">البريد الإلكتروني</label>
+            <input type="email" id="email" placeholder="name@gogreen.com" required autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="pass">كلمة المرور</label>
+            <div style="position:relative;">
+              <input type="password" id="pass" placeholder="••••••••" required autocomplete="current-password" style="padding-left:44px;">
+              <button type="button" id="toggle-pass" aria-label="إظهار كلمة المرور" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:8px;color:var(--muted);">
+                <svg id="eye-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="submit" id="login-btn">
+            <span class="spinner" id="spinner"></span>
+            <span id="btn-text">دخول</span>
+          </button>
+        </form>
+
+        <div class="msg" id="msg"></div>
+        <p class="foot-note">الحسابات تُنشأ بواسطة إدارة النظام فقط</p>
+      </div>
+    </div>
+  </div>
+
+<script src="config.js"></script>
+<script>
+  const form = document.getElementById('login-form');
+  const btn = document.getElementById('login-btn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btn-text');
+  const msg = document.getElementById('msg');
+
+  const passInput = document.getElementById('pass');
+  const toggleBtn = document.getElementById('toggle-pass');
+  const eyeIcon = document.getElementById('eye-icon');
+  const eyeOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  const eyeClosed = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.61 3.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+
+  toggleBtn.addEventListener('click', () => {
+    const showing = passInput.type === 'text';
+    passInput.type = showing ? 'password' : 'text';
+    eyeIcon.innerHTML = showing ? eyeOpen : eyeClosed;
+    toggleBtn.setAttribute('aria-label', showing ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور');
+  });
+
+  // لو المستخدم داخل بالفعل، وديه على الداشبورد على طول
+  sb.auth.getSession().then(async ({ data: { session } }) => {
+    if (session) {
+      const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+      window.location.href = profile?.role === 'admin' ? 'dashboard.html' : 'tasks.html';
+    }
+  });
+
+  function showMsg(text, type){
+    msg.textContent = text;
+    msg.className = "msg " + type;
+  }
+
+  function setLoading(loading){
+    btn.disabled = loading;
+    spinner.style.display = loading ? "inline-block" : "none";
+    btnText.textContent = loading ? "جاري الدخول..." : "دخول";
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.style.display = "none";
+    setLoading(true);
+
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('pass').value;
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+    setLoading(false);
+
+    if (error) {
+      showMsg("بيانات الدخول غير صحيحة أو الحساب غير موجود.", "error");
+      return;
+    }
+
+    showMsg("تم الدخول بنجاح، جاري التحويل...", "ok");
+
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', data.user.id).single();
+    const destination = profile?.role === 'admin' ? 'dashboard.html' : 'tasks.html';
+    setTimeout(() => window.location.href = destination, 600);
+  });
+</script>
+</body>
+</html>
