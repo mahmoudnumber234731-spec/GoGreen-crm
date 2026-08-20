@@ -94,7 +94,10 @@
   </section>
 
   <section id="presence-section" style="display:none;">
-    <h2 class="section-title">حالة الموظفين (أونلاين / أوفلاين)</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <h2 class="section-title" style="margin:0;">حالة الموظفين (أونلاين / أوفلاين)</h2>
+      <button id="open-add-employee" style="background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;">+ موظف جديد</button>
+    </div>
     <div class="people-list" id="people-list"></div>
   </section>
 </div>
@@ -108,6 +111,23 @@
     <div class="modal-actions">
       <button class="btn-ghost" id="cancel-dept">إلغاء</button>
       <button class="btn-primary" id="save-dept">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال إضافة موظف -->
+<div class="modal-bg" id="employee-modal">
+  <div class="modal">
+    <h3>إضافة موظف جديد</h3>
+    <input type="text" id="emp-fullname" placeholder="الاسم الظاهر">
+    <input type="text" id="emp-username" placeholder="اسم المستخدم (بدون مسافات)">
+    <input type="email" id="emp-email" placeholder="البريد الإلكتروني">
+    <input type="password" id="emp-password" placeholder="كلمة المرور المبدئية">
+    <select id="emp-department"></select>
+    <div id="emp-msg" style="font-size:12.5px;margin-bottom:10px;display:none;padding:8px 10px;border-radius:7px;"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancel-employee">إلغاء</button>
+      <button class="btn-primary" id="save-employee">إضافة</button>
     </div>
   </div>
 </div>
@@ -196,6 +216,62 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   await sb.auth.signOut();
   window.location.href = 'index.html';
 });
+
+document.getElementById('open-add-employee').onclick = async () => {
+  const { data: depts } = await sb.from('departments').select('id, name').order('created_at');
+  const sel = document.getElementById('emp-department');
+  sel.innerHTML = (depts || []).map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
+  document.getElementById('employee-modal').classList.add('show');
+};
+
+document.getElementById('cancel-employee').onclick = () => document.getElementById('employee-modal').classList.remove('show');
+
+document.getElementById('save-employee').onclick = async () => {
+  const full_name = document.getElementById('emp-fullname').value.trim();
+  const username = document.getElementById('emp-username').value.trim();
+  const email = document.getElementById('emp-email').value.trim();
+  const password = document.getElementById('emp-password').value;
+  const department_id = document.getElementById('emp-department').value;
+  const msgEl = document.getElementById('emp-msg');
+
+  if (!full_name || !username || !email || password.length < 6) {
+    msgEl.textContent = 'اتأكد إن كل الحقول متملية وكلمة المرور 6 حروف على الأقل';
+    msgEl.style.cssText = 'display:block;background:#FBEAEA;color:#C1666B;font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+    return;
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  msgEl.textContent = 'جاري الإضافة...';
+  msgEl.style.cssText = 'display:block;background:#EEF6F1;color:var(--primary);font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-employee`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ email, password, username, full_name, department_id }),
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      msgEl.textContent = result.error || 'حصل خطأ غير متوقع';
+      msgEl.style.cssText = 'display:block;background:#FBEAEA;color:#C1666B;font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+      return;
+    }
+
+    document.getElementById('emp-fullname').value = '';
+    document.getElementById('emp-username').value = '';
+    document.getElementById('emp-email').value = '';
+    document.getElementById('emp-password').value = '';
+    document.getElementById('employee-modal').classList.remove('show');
+    loadPresence();
+  } catch (err) {
+    msgEl.textContent = 'تعذّر الاتصال بالسيرفر: ' + err.message;
+    msgEl.style.cssText = 'display:block;background:#FBEAEA;color:#C1666B;font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+  }
+};
 
 document.getElementById('cancel-dept').onclick = () => document.getElementById('dept-modal').classList.remove('show');
 document.getElementById('save-dept').onclick = async () => {
