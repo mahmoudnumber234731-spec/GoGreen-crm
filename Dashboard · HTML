@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoGreen CRM — الرئيسية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --dark:#122A1C; --primary:#1B4332; --accent:#52B788; --accent-light:#95D5B2;
+    --earth:#A9814A; --bg:#F7F5F0; --text:#1F2521; --muted:#6B7268; --danger:#C1666B;
+    --line:#E4E2DA;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;background:var(--primary);color:#fff;
+    position:sticky;top:0;z-index:10;
+  }
+  .topbar .brand{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:700;font-size:19px;}
+  .topbar .brand .glyph{width:32px;height:32px;background:var(--accent);border-radius:8px;display:grid;place-items:center;font-size:16px;}
+  .topbar .who{display:flex;align-items:center;gap:12px;}
+  .avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:var(--accent-light);border:2px solid rgba(255,255,255,.5);}
+  .who a{color:#EAF3ED;text-decoration:none;font-size:13.5px;}
+  .who .status-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,.35);}
+  .logout{background:rgba(255,255,255,.12);border:none;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;}
+  .logout:hover{background:rgba(255,255,255,.22);}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 60px;}
+  .hello{font-family:'Fraunces',serif;font-size:24px;margin:0 0 4px;}
+  .hello .muted{color:var(--muted);font-family:'Tajawal';font-size:14px;font-weight:400;}
+  section{margin-top:36px;}
+  h2.section-title{font-size:16px;color:var(--primary);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  h2.section-title::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px;}
+
+  .dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+  .dept-card{
+    background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;
+    cursor:pointer;transition:transform .12s, box-shadow .12s;
+  }
+  .dept-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(27,67,50,.1);}
+  .dept-card .icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;margin-bottom:12px;}
+  .dept-card .name{font-weight:700;font-size:14.5px;}
+  .dept-card .sub{color:var(--muted);font-size:12px;margin-top:3px;}
+
+  .add-dept-card{border:1.5px dashed #C7CFC5;background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13.5px;flex-direction:column;gap:6px;min-height:110px;}
+  .add-dept-card:hover{border-color:var(--accent);color:var(--primary);}
+
+  .people-list{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .person-row{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);}
+  .person-row:last-child{border-bottom:none;}
+  .person-row .avatar{width:34px;height:34px;}
+  .p-name{font-weight:600;font-size:14px;}
+  .p-dept{color:var(--muted);font-size:12px;}
+  .dot{width:8px;height:8px;border-radius:50%;margin-inline-start:auto;}
+  .dot.on{background:var(--accent);box-shadow:0 0 0 3px rgba(82,183,136,.25);}
+  .dot.off{background:#C9C4B8;}
+  .badge{font-size:11px;padding:3px 8px;border-radius:20px;background:#EEF6F1;color:var(--primary);margin-inline-start:8px;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(18,42,28,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff;border-radius:14px;padding:26px;width:100%;max-width:340px;}
+  .modal h3{margin:0 0 16px;font-family:'Fraunces',serif;}
+  .modal input, .modal select{width:100%;padding:11px;border:1.5px solid var(--line);border-radius:9px;margin-bottom:12px;font-family:inherit;font-size:14px;}
+  .modal-actions{display:flex;gap:10px;margin-top:6px;}
+  .modal-actions button{flex:1;padding:11px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:13.5px;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-ghost{background:#F1EFE9;color:var(--text);}
+  #empty-dept-msg{color:var(--muted);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><img src="logo.jpg" alt="GoGreen" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">GoGreen CRM</div>
+  <div class="who">
+    <a href="tasks.html" style="background:rgba(255,255,255,.12);padding:8px 14px;border-radius:8px;">مهامي</a>
+    <span class="status-dot" title="أونلاين"></span>
+    <img class="avatar" id="my-avatar" src="" alt="">
+    <a href="profile.html">إعدادات الحساب</a>
+    <button class="logout" id="logout-btn">تسجيل الخروج</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 class="hello">أهلاً، <span id="my-name">...</span></h1>
+  <p class="hello muted" id="my-role-line"></p>
+
+  <section id="depts-section" style="display:none;">
+    <h2 class="section-title">أقسام الشركة</h2>
+    <div class="dept-grid" id="dept-grid"></div>
+  </section>
+
+  <section id="kpi-link-section" style="display:none;">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <div class="dept-card" style="cursor:pointer;max-width:260px;flex:1;" onclick="window.location.href='team-kpi.html'">
+        <div class="icon" style="background:#52B78822;color:var(--primary);">📊</div>
+        <div class="name">أداء الفريق (KPI)</div>
+        <div class="sub">متابعة إنجاز كل موظف</div>
+      </div>
+      <div class="dept-card" style="cursor:pointer;max-width:260px;flex:1;" onclick="window.location.href='permissions.html'">
+        <div class="icon" style="background:#A9814A22;color:var(--earth);">🔐</div>
+        <div class="name">إدارة الصلاحيات</div>
+        <div class="sub">تحديد وصول كل موظف</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="presence-section" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <h2 class="section-title" style="margin:0;">حالة الموظفين (أونلاين / أوفلاين)</h2>
+      <button id="open-add-employee" style="background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;">+ موظف جديد</button>
+    </div>
+    <div class="people-list" id="people-list"></div>
+  </section>
+</div>
+
+<!-- مودال إضافة قسم -->
+<div class="modal-bg" id="dept-modal">
+  <div class="modal">
+    <h3>إضافة قسم جديد</h3>
+    <input type="text" id="new-dept-name" placeholder="اسم القسم">
+    <input type="text" id="new-dept-icon" placeholder="رمز/إيموجي (اختياري) مثال: 📦">
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancel-dept">إلغاء</button>
+      <button class="btn-primary" id="save-dept">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال إضافة موظف -->
+<div class="modal-bg" id="employee-modal">
+  <div class="modal">
+    <h3>إضافة موظف جديد</h3>
+    <input type="text" id="emp-fullname" placeholder="الاسم الظاهر">
+    <input type="text" id="emp-username" placeholder="اسم المستخدم (بدون مسافات)">
+    <input type="email" id="emp-email" placeholder="البريد الإلكتروني">
+    <div style="position:relative;margin-bottom:12px;">
+      <input type="password" id="emp-password" placeholder="كلمة المرور المبدئية" style="margin-bottom:0;padding-left:40px;">
+      <button type="button" id="emp-pw-toggle" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:7px;color:var(--muted);">
+        <svg id="emp-pw-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <select id="emp-department"></select>
+    <div id="emp-msg" style="font-size:12.5px;margin-bottom:10px;display:none;padding:8px 10px;border-radius:7px;"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancel-employee">إلغاء</button>
+      <button class="btn-primary" id="save-employee">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+let me = null;
+let myProfile = null;
+
+async function init(){
+  const session = await requireAuth();
+  if(!session) return;
+  me = session.user;
+
+  const { data: profile } = await sb.from('profiles').select('*, departments(name)').eq('id', me.id).single();
+  myProfile = profile;
+
+  if(profile?.role !== 'admin'){
+    window.location.href = 'tasks.html';
+    return;
+  }
+
+  document.getElementById('my-name').textContent = profile?.full_name || profile?.username || me.email;
+  document.getElementById('my-avatar').src = profile?.avatar_url || defaultAvatar(profile?.username || me.email);
+  document.getElementById('my-role-line').textContent = profile?.role === 'admin' ? 'مدير النظام' : (profile?.departments?.name || 'موظف');
+
+  startHeartbeat(me.id);
+
+  if(profile?.role === 'admin'){
+    document.getElementById('depts-section').style.display = 'block';
+    loadDepartments();
+  }
+
+  if(profile?.role === 'admin'){
+    document.getElementById('presence-section').style.display = 'block';
+    document.getElementById('kpi-link-section').style.display = 'block';
+    loadPresence();
+    setInterval(loadPresence, 15000);
+  }
+}
+
+function defaultAvatar(seed){
+  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed || 'G')}&backgroundColor=52B788`;
+}
+
+async function loadDepartments(){
+  const { data: depts } = await sb.from('departments').select('*').order('created_at');
+  const grid = document.getElementById('dept-grid');
+  grid.innerHTML = '';
+
+  (depts || []).forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'dept-card';
+    card.innerHTML = `
+      <div class="icon" style="background:${d.color}22;color:${d.color}">${d.icon || '📁'}</div>
+      <div class="name">${escapeHtml(d.name)}</div>
+      <div class="sub">فتح القسم</div>`;
+    card.onclick = () => alert('هتقدر تربط هنا صفحة/جدول القسم الخاص بـ "' + d.name + '" — ده مكان جاهز لإضافة محتوى القسم.');
+    grid.appendChild(card);
+  });
+
+  if(myProfile?.role === 'admin'){
+    const addCard = document.createElement('div');
+    addCard.className = 'dept-card add-dept-card';
+    addCard.innerHTML = `<div style="font-size:22px;">+</div><div>إضافة قسم جديد</div>`;
+    addCard.onclick = () => document.getElementById('dept-modal').classList.add('show');
+    grid.appendChild(addCard);
+  }
+}
+
+async function loadPresence(){
+  const { data: people } = await sb.from('profiles').select('*, departments(name)').order('full_name');
+  const list = document.getElementById('people-list');
+  list.innerHTML = '';
+
+  (people || []).forEach(p => {
+    const online = isOnline(p.last_seen);
+    const row = document.createElement('div');
+    row.className = 'person-row';
+    row.innerHTML = `
+      <img class="avatar" src="${p.avatar_url || defaultAvatar(p.username)}">
+      <div>
+        <div class="p-name">${escapeHtml(p.full_name || p.username)} ${p.role === 'admin' ? '<span class="badge">أدمن</span>' : ''}</div>
+        <div class="p-dept">${escapeHtml(p.departments?.name || '—')}</div>
+      </div>
+      <div class="dot ${online ? 'on' : 'off'}" title="${online ? 'أونلاين' : 'أوفلاين'}"></div>`;
+    list.appendChild(row);
+  });
+}
+
+function escapeHtml(s){
+  return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
+});
+
+document.getElementById('emp-pw-toggle').addEventListener('click', () => {
+  const input = document.getElementById('emp-password');
+  const icon = document.getElementById('emp-pw-eye');
+  const eyeOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  const eyeClosed = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.61 3.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  icon.innerHTML = showing ? eyeOpen : eyeClosed;
+});
+
+document.getElementById('open-add-employee').onclick = async () => {
+  const { data: depts } = await sb.from('departments').select('id, name').order('created_at');
+  const sel = document.getElementById('emp-department');
+  sel.innerHTML = (depts || []).map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
+  document.getElementById('employee-modal').classList.add('show');
+};
+
+document.getElementById('cancel-employee').onclick = () => document.getElementById('employee-modal').classList.remove('show');
+
+document.getElementById('save-employee').onclick = async () => {
+  const full_name = document.getElementById('emp-fullname').value.trim();
+  const username = document.getElementById('emp-username').value.trim();
+  const email = document.getElementById('emp-email').value.trim();
+  const password = document.getElementById('emp-password').value;
+  const department_id = document.getElementById('emp-department').value;
+  const msgEl = document.getElementById('emp-msg');
+
+  if (!full_name || !username || !email || password.length < 6) {
+    msgEl.textContent = 'اتأكد إن كل الحقول متملية وكلمة المرور 6 حروف على الأقل';
+    msgEl.style.cssText = 'display:block;background:#FBEAEA;color:#C1666B;font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+    return;
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  msgEl.textContent = 'جاري الإضافة...';
+  msgEl.style.cssText = 'display:block;background:#EEF6F1;color:var(--primary);font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-employee`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ email, password, username, full_name, department_id }),
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      msgEl.textContent = result.error || 'حصل خطأ غير متوقع';
+      msgEl.style.cssText = 'display:block;background:#FBEAEA;color:#C1666B;font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+      return;
+    }
+
+    document.getElementById('emp-fullname').value = '';
+    document.getElementById('emp-username').value = '';
+    document.getElementById('emp-email').value = '';
+    document.getElementById('emp-password').value = '';
+    document.getElementById('employee-modal').classList.remove('show');
+    loadPresence();
+  } catch (err) {
+    msgEl.textContent = 'تعذّر الاتصال بالسيرفر: ' + err.message;
+    msgEl.style.cssText = 'display:block;background:#FBEAEA;color:#C1666B;font-size:12.5px;margin-bottom:10px;padding:8px 10px;border-radius:7px;';
+  }
+};
+
+document.getElementById('cancel-dept').onclick = () => document.getElementById('dept-modal').classList.remove('show');
+document.getElementById('save-dept').onclick = async () => {
+  const name = document.getElementById('new-dept-name').value.trim();
+  const icon = document.getElementById('new-dept-icon').value.trim() || '📁';
+  if(!name) return;
+  const { error } = await sb.from('departments').insert({ name, icon });
+  if(error){ alert('حصل خطأ: ' + error.message); return; }
+  document.getElementById('new-dept-name').value = '';
+  document.getElementById('new-dept-icon').value = '';
+  document.getElementById('dept-modal').classList.remove('show');
+  loadDepartments();
+};
+
+init();
+</script>
+</body>
+</html>
