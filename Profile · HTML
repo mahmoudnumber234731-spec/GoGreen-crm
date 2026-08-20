@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoGreen CRM — إعدادات الحساب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --dark:#122A1C; --primary:#1B4332; --accent:#52B788; --accent-light:#95D5B2;
+    --bg:#F7F5F0; --text:#1F2521; --muted:#6B7268; --danger:#C1666B; --line:#E4E2DA;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;background:var(--primary);color:#fff;}
+  .topbar a{color:#EAF3ED;text-decoration:none;font-size:14px;}
+  .topbar .brand{font-family:'Fraunces',serif;font-weight:700;font-size:18px;}
+  .wrap{max-width:560px;margin:0 auto;padding:40px 20px 60px;}
+  h1{font-family:'Fraunces',serif;font-size:24px;margin:0 0 28px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:20px;}
+  .card h2{font-size:15px;margin:0 0 16px;color:var(--primary);}
+  .avatar-row{display:flex;align-items:center;gap:16px;}
+  .avatar-big{width:76px;height:76px;border-radius:50%;object-fit:cover;background:var(--accent-light);}
+  .upload-label{background:#F1EFE9;padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer;display:inline-block;}
+  .upload-label:hover{background:#E8E5DC;}
+  input[type=file]{display:none;}
+  label{display:block;font-size:13px;font-weight:600;color:var(--primary);margin-bottom:6px;}
+  .field{margin-bottom:14px;}
+  input[type=text], input[type=password]{
+    width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;font-family:inherit;
+  }
+  input:focus{outline:none;border-color:var(--accent);}
+  button.save{
+    background:var(--primary);color:#fff;border:none;padding:11px 18px;border-radius:9px;
+    font-weight:700;cursor:pointer;font-family:inherit;font-size:13.5px;
+  }
+  button.save:hover{background:var(--dark);}
+  .msg{font-size:13px;margin-top:10px;padding:9px 12px;border-radius:8px;display:none;}
+  .msg.ok{background:#E9F6EF;color:#1D6E45;display:block;}
+  .msg.error{background:#FBEAEA;color:var(--danger);display:block;}
+  .hint{color:var(--muted);font-size:12px;margin-top:-6px;margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="dashboard.html">&#8594; رجوع للرئيسية</a>
+  <span class="brand" style="margin-inline-start:auto;display:flex;align-items:center;gap:8px;"><img src="logo.jpg" alt="GoGreen" style="width:26px;height:26px;border-radius:50%;object-fit:cover;">GoGreen CRM</span>
+</div>
+
+<div class="wrap">
+  <h1>إعدادات الحساب</h1>
+
+  <div class="card">
+    <h2>الصورة الشخصية</h2>
+    <div class="avatar-row">
+      <img class="avatar-big" id="avatar-preview" src="">
+      <div>
+        <label class="upload-label" for="avatar-input">تغيير الصورة</label>
+        <input type="file" id="avatar-input" accept="image/*">
+        <div id="avatar-msg" class="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>البيانات الأساسية</h2>
+    <div class="field">
+      <label>الاسم الظاهر</label>
+      <input type="text" id="full-name">
+    </div>
+    <div class="field">
+      <label>اسم المستخدم</label>
+      <input type="text" id="username">
+      <div class="hint">يُستخدم كمعرّف لك داخل النظام (بدون مسافات)</div>
+    </div>
+    <button class="save" id="save-profile">حفظ التعديلات</button>
+    <div class="msg" id="profile-msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>تغيير كلمة المرور</h2>
+    <div class="field">
+      <label>كلمة المرور الجديدة</label>
+      <div style="position:relative;">
+        <input type="password" id="new-pass" placeholder="••••••••" style="padding-left:40px;">
+        <button type="button" class="pw-toggle" data-target="new-pass" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:7px;color:var(--muted);">
+          <svg class="pw-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="field">
+      <label>تأكيد كلمة المرور</label>
+      <div style="position:relative;">
+        <input type="password" id="confirm-pass" placeholder="••••••••" style="padding-left:40px;">
+        <button type="button" class="pw-toggle" data-target="confirm-pass" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:7px;color:var(--muted);">
+          <svg class="pw-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="save" id="save-pass">تحديث كلمة المرور</button>
+    <div class="msg" id="pass-msg"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const eyeOpen = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+const eyeClosed = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.61 3.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+
+document.querySelectorAll('.pw-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const icon = btn.querySelector('.pw-eye');
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    icon.innerHTML = showing ? eyeOpen : eyeClosed;
+  });
+});
+
+let me = null;
+
+async function init(){
+  const session = await requireAuth();
+  if(!session) return;
+  me = session.user;
+
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', me.id).single();
+  document.getElementById('full-name').value = profile?.full_name || '';
+  document.getElementById('username').value = profile?.username || '';
+  document.getElementById('avatar-preview').src = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile?.username || me.email)}&backgroundColor=52B788`;
+}
+
+function showMsg(id, text, type){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + type;
+}
+
+document.getElementById('save-profile').addEventListener('click', async () => {
+  const full_name = document.getElementById('full-name').value.trim();
+  const username = document.getElementById('username').value.trim();
+
+  if(!username){ showMsg('profile-msg', 'اسم المستخدم مطلوب', 'error'); return; }
+
+  const { error } = await sb.from('profiles').update({ full_name, username }).eq('id', me.id);
+  if(error){
+    showMsg('profile-msg', error.code === '23505' ? 'اسم المستخدم ده مستخدم بالفعل' : 'خطأ: ' + error.message, 'error');
+  } else {
+    showMsg('profile-msg', 'تم الحفظ بنجاح', 'ok');
+  }
+});
+
+document.getElementById('save-pass').addEventListener('click', async () => {
+  const p1 = document.getElementById('new-pass').value;
+  const p2 = document.getElementById('confirm-pass').value;
+
+  if(p1.length < 6){ showMsg('pass-msg', 'كلمة المرور لازم تكون 6 حروف على الأقل', 'error'); return; }
+  if(p1 !== p2){ showMsg('pass-msg', 'كلمتا المرور غير متطابقتين', 'error'); return; }
+
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if(error){
+    showMsg('pass-msg', 'خطأ: ' + error.message, 'error');
+  } else {
+    showMsg('pass-msg', 'تم تحديث كلمة المرور بنجاح', 'ok');
+    document.getElementById('new-pass').value = '';
+    document.getElementById('confirm-pass').value = '';
+  }
+});
+
+document.getElementById('avatar-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const ext = file.name.split('.').pop();
+  const path = `${me.id}/avatar.${ext}`;
+
+  showMsg('avatar-msg', 'جاري الرفع...', 'ok');
+
+  const { error: uploadError } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
+  if(uploadError){ showMsg('avatar-msg', 'خطأ في الرفع: ' + uploadError.message, 'error'); return; }
+
+  const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(path);
+  const urlWithCacheBust = publicUrl + '?t=' + Date.now();
+
+  const { error: updateError } = await sb.from('profiles').update({ avatar_url: urlWithCacheBust }).eq('id', me.id);
+  if(updateError){ showMsg('avatar-msg', 'خطأ في الحفظ: ' + updateError.message, 'error'); return; }
+
+  document.getElementById('avatar-preview').src = urlWithCacheBust;
+  showMsg('avatar-msg', 'تم تحديث الصورة', 'ok');
+});
+
+init();
+</script>
+</body>
+</html>
